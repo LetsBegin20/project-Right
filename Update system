@@ -1,0 +1,63 @@
+Начальная, базовая настройка сети debian
+
+Для удобства можно переименовать машину, это можно сделать перейдя в режим суперпользователя:
+
+Нужно ввести su, далее через nano заходим в файл содержащий исходное имя и редактируем его на необходимое
+nano /etc/hostname 
+сохраняем файл через сочетание ctrl + X
+После перезагрузки можно проверить крмандой hostname;
+
+После этого в связи с ограничениями необходимо сменить репозитории:
+вводим команду:
+nano /etc/apt/sources.list 
+
+в файле необходимо заменить "mirror.corbina.net/debian/" на "mirror.yandex.ru" везде, чтобы получить следующий вид репозитория
+
+deb http://mirror.yandex.ru/debian bullseye main
+deb-src http://mirror.yandex.ru/debian bullseye main
+
+deb http://mirror.yandex.ru/debian bullseye-updates main
+deb-src http://mirror.yandex.ru/debian bullseye-updates main
+
+deb https://mirror.yandex.ru/debian-security bullseye-security main
+deb-src https://mirror.yandex.ru/debian-security bullseye-security main
+
+сохраняем настройки ctrl+x
+
+Далее проводим обновление системы через команды apt update и apt upgrade, через "Y" подтверждаем изменения.
+После этого настроим сетеые интерфейсы:
+Заходим в настройки интерфейса. 
+
+nano /etc/systemd/network/lan-static.network
+
+Прописываем настройки подобным образом
+
+[Match]
+Name=ens33
+[Network]
+Description=Local network
+Address=192.168.100.22/24
+Gateway=192.168.100.1
+DNS=192.168.100.10 192.168.110.10
+Domains=vmblog.local
+LinkLocalAddressing=no
+NTP=time.google.com
+
+Далее включаем службу systemd-networkd:
+
+systemctl enable systemd-networkd
+systemctl start systemd-networkd
+
+Выводим сетевые настройки (для проверки сохранения файла настроек):
+
+networkctl status
+
+После внесения изменения в конфигурационные файлы с сетевыми настройками перезапускаем networkd:
+
+systemctl restart systemd-networkd
+
+Проверить сетевые настройки можно через команду ip a
+
+Для взаимодействия между сетями необходимо включить ip forwarding для включения маршрутизации на оборудовании, для этого вводим:
+
+echo “net.ipv4.ip_forward=1” > /etc/sysctl.conf; sysctl -p

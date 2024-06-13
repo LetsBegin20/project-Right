@@ -1,0 +1,83 @@
+ISP (3 интерфейса) CLI
+ISP - RTR-R
+ISP - RTR-L
+WEB-L и SRV - RTR-L
+WEB-R - RTR-R
+Производим переименование устройств
+Вход в режим суперпользователя: 
+Нужно ввести su и ввести пароль от root который мы задавали при создании виртуальных машин
+Далее через nano заходим в файл содержащий исходное имя и редактируем его на необходимое
+nano /etc/hostname 
+сохраняем файл через сочетание ctrl + X
+через команду hostname можно проверить название объекта
+
+Изменение репозиториев:
+Заходим в файл настроек и находим следующие строчки:
+вводим команду:
+nano /etc/apt/sources.list 
+и находим следующие строки
+
+deb http://mirror.corbina.net/debian/ buster main
+deb-src http://mirror.corbina.net/debian/ buster main
+
+deb http://security.debian.org/debian-security buster/updates main
+deb-src http://security.debian.org/debian-security buster/updates main
+
+# buster-updates, previously known as 'volatile'
+deb http://mirror.corbina.net/debian/ buster-updates main
+deb-src http://mirror.corbina.net/debian/ buster-updates main
+
+необходимо заменить "mirror.corbina.net/debian/" на "mirror.yandex.ru" везде, чтобы получить следующий вид репозитория
+
+deb http://mirror.yandex.ru/debian bullseye main
+deb-src http://mirror.yandex.ru/debian bullseye main
+
+deb http://mirror.yandex.ru/debian bullseye-updates main
+deb-src http://mirror.yandex.ru/debian bullseye-updates main
+
+deb https://mirror.yandex.ru/debian-security bullseye-security main
+deb-src https://mirror.yandex.ru/debian-security bullseye-security main
+сохраняем настройки ctrl+x
+Далее проводим обновление системы через команды apt update и apt upgrade, через "Y" подтверждаем изменения.
+
+
+День 2 Настройка сетевых интерфейсов и внесение в LAN
+Перед созданием необходимо выключить настраиваемую машинку
+Создаем необходимые интерфейсы на устройствах где это необходимо
+Создаем LAN сегменты (5 шт)
+
+Задание сетевых настроек для интерфейсов:
+Заходим в настройки интерфейса. 
+
+nano /etc/systemd/network/lan-static.network
+копируем следующие настройки
+[Match]
+Name=ens33
+[Network]
+Description=Local network
+Address=192.168.100.22/24
+Gateway=192.168.100.1
+
+После копирования, меняем настройки на необходимые, взятые из таблицы демоэкзамена. 
+При наличии нескольких интерфейсов стоит сменить имя в поле name
+Далее включаем службу systemd-networkd:
+
+systemctl enable systemd-networkd
+systemctl start systemd-networkd
+
+Выводим сетевые настройки (для проверки сохранения файла настроек):
+
+networkctl status
+
+После внесения изменения в конфигурационные файлы с сетевыми настройками перезапускаем networkd:
+
+systemctl restart systemd-networkd
+
+проверка сетевых настроек через команду ip a
+
+Для того чтобы редактировать настройки других интерфейсах необходимо изменить название файла для создания нового пула настроек "lan-static.network" 
+на имя интерфейса к которому делаются настройки "ens36.network" и полная команда будет выглядеть следуюзим образом: "nano /etc/systemd/network/ens36.network"
+
+
+настройки взяты с:
+https://vmblog.ru/systemd-networkd-nastroyka-seti/
